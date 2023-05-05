@@ -2,6 +2,7 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.image.Image;
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -10,26 +11,28 @@ import javafx.scene.control.Button;
 
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.scene.control.*;
-import org.w3c.dom.events.Event;
+import javafx.stage.WindowEvent;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 
 public class Del2 extends Application {
 
     private BorderPane root = new BorderPane();
     private VBox vBox = new VBox();
-    private FlowPane center = new FlowPane();
-    private Pane bottom = new Pane();
+    // private FlowPane center = new FlowPane();
+    private Pane center = new Pane();
     private Pane map = new Pane();
     private Stage stage;
+    private Button newPlace;
 
     public void start(Stage primaryStage) {
         this.stage = primaryStage;
@@ -65,8 +68,12 @@ public class Del2 extends Application {
         findPath.setOnAction(new FindHandler());
         Button showConnection = new Button("Show Connection");
         showConnection.setOnAction(new ShowConnectionHandler());
-        Button newPlace = new Button("New Place");
+
+
+        newPlace = new Button("New Place");
         newPlace.setOnAction(new NewPlaceHandler());
+
+
         Button newConnection = new Button("New Connection");
         newConnection.setOnAction(new NewConnectionHandler());
         Button changeConnection = new Button("Change Connection");
@@ -81,61 +88,100 @@ public class Del2 extends Application {
         primaryStage.show();
 
     }
+
     class ChangeConnectionHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent event) {
         }
     }
+
     class NewConnectionHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent event) {
         }
     }
+
     class NewPlaceHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent event) {
+            map.setOnMouseClicked(new KlickHandler());
+            newPlace.setDisable(true);
+            map.setCursor(Cursor.CROSSHAIR);
         }
     }
+
+    class KlickHandler implements EventHandler<MouseEvent> {
+        @Override
+        public void handle(MouseEvent event) {
+
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Name");
+            alert.setHeaderText("Name of place");
+
+
+
+            double x = event.getX();
+            double y = event.getY();
+            Place place = new Place(x, y);
+            map.getChildren().add(place);
+        }
+    }
+
     class ShowConnectionHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent event) {
         }
     }
+
     class FindHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent event) {
         }
     }
+
     ////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////
     class ExitMenuHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent event) {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Obs");
+            alert.setHeaderText("Avsluta utan att spara?");
+            Optional<ButtonType> svar = alert.showAndWait();
+            if (svar.isPresent() && svar.get() == ButtonType.CANCEL) {
+                event.consume();
+            } else if (svar.isPresent() && svar.get() == ButtonType.OK) {
+                stage.fireEvent(new WindowEvent(stage, WindowEvent.WINDOW_CLOSE_REQUEST));
+            }
         }
     }
+
     class SaveImageMenuHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent event) {
-            try{
+            try {
                 WritableImage image = root.snapshot(null, null);
                 BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null);
                 ImageIO.write(bufferedImage, "png", new File("capture.png"));
-            }catch(IOException e){
+            } catch (IOException e) {
                 Alert alert = new Alert(Alert.AlertType.ERROR, "Fel");
                 alert.showAndWait();
             }
         }
     }
+
     class SaveMenuHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent event) {
         }
     }
+
     class OpenItemHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent event) {
         }
     }
+
     class newMapHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent event) {
@@ -149,4 +195,5 @@ public class Del2 extends Application {
 
         }
     }
+    class alertGridpane
 }

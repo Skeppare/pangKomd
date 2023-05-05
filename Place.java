@@ -11,9 +11,9 @@ import javafx.scene.shape.Shape;
 
         private String name;
 
-    public Place(double x, double y) {
+    public Place(String name, double x, double y) {
         super(x, y, 10);
-        //this.name = name;
+        this.name = name;
         relocate(x, y);
         setFill(Color.BLUE);
     }

@@ -34,6 +34,7 @@ public class Del2 extends Application {
     private Stage stage;
     private Button newPlace;
 
+
     public void start(Stage primaryStage) {
         this.stage = primaryStage;
         Menu fileMenu = new Menu("File");
@@ -107,23 +108,26 @@ public class Del2 extends Application {
             map.setOnMouseClicked(new KlickHandler());
             newPlace.setDisable(true);
             map.setCursor(Cursor.CROSSHAIR);
+
         }
     }
 
     class KlickHandler implements EventHandler<MouseEvent> {
+
         @Override
         public void handle(MouseEvent event) {
 
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Name");
-            alert.setHeaderText("Name of place");
-
-
-
-            double x = event.getX();
-            double y = event.getY();
-            Place place = new Place(x, y);
-            map.getChildren().add(place);
+            NameDialog dialog = new NameDialog();
+            Optional<String> result = dialog.showAndWait();
+            if (result.isPresent()) {
+                String name = result.get();
+                double x = event.getX();
+                double y = event.getY();
+                Place place = new Place(name, x, y);
+                map.getChildren().add(place);
+                newPlace.setDisable(false);
+                map.setCursor(Cursor.DEFAULT);
+            }
         }
     }
 
@@ -195,5 +199,5 @@ public class Del2 extends Application {
 
         }
     }
-    class alertGridpane
+
 }

@@ -13,9 +13,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.scene.control.*;
 import javafx.stage.WindowEvent;
@@ -31,10 +28,13 @@ public class JavaFX extends Application {
 
     private BorderPane root = new BorderPane();
     private VBox vBox = new VBox();
-    private FlowPane center = new FlowPane();
-    private Pane bottom = new Pane();
+    // private FlowPane center = new FlowPane();
+    private Pane center = new Pane();
     private Pane map = new Pane();
     private Stage stage;
+    private Button newPlace;
+
+    private ListGraph<Place> list = new ListGraph<>();
 
     public void start(Stage primaryStage) {
         this.stage = primaryStage;
@@ -45,13 +45,10 @@ public class JavaFX extends Application {
 
         MenuItem openMenuItem = new MenuItem("Open");
         openMenuItem.setOnAction((new OpenItemHandler()));
-
         MenuItem saveMenuItem = new MenuItem("Save");
         saveMenuItem.setOnAction(new SaveMenuHandler());
-
         MenuItem saveImageMenuItem = new MenuItem("Save Image");
         saveImageMenuItem.setOnAction(new SaveImageMenuHandler());
-
         MenuItem exitMenuItem = new MenuItem("Exit");
         exitMenuItem.setOnAction(new ExitMenuHandler());
 
@@ -73,8 +70,12 @@ public class JavaFX extends Application {
         findPath.setOnAction(new FindHandler());
         Button showConnection = new Button("Show Connection");
         showConnection.setOnAction(new ShowConnectionHandler());
-        Button newPlace = new Button("New Place");
+
+
+        newPlace = new Button("New Place");
         newPlace.setOnAction(new NewPlaceHandler());
+
+
         Button newConnection = new Button("New Connection");
         newConnection.setOnAction(new NewConnectionHandler());
         Button changeConnection = new Button("Change Connection");
@@ -89,6 +90,7 @@ public class JavaFX extends Application {
         primaryStage.show();
 
     }
+
     class ChangeConnectionHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent event) {
@@ -101,77 +103,120 @@ public class JavaFX extends Application {
         }
     }
 
+    class ConnectionWindow extends InputDialog {
+        private TextField connectionName = new TextField();
+        private TextField time = new TextField();
 
-    class NewPlaceHandler implements EventHandler<ActionEvent> {
-        private boolean isAddingPlace = false;
+        public ConnectionWindow() {
+            super(AlertType.CONFIRMATION);
 
-        @Override
-        public void handle(ActionEvent event) {
-            isAddingPlace = !isAddingPlace;
-            Scene scene = ((Button) event.getSource()).getScene();
-            if (isAddingPlace) {
-                scene.setCursor(Cursor.CROSSHAIR);
-                ((Button) event.getSource()).setDisable(true);
-            } else {
-                scene.setCursor(Cursor.DEFAULT);
-                ((Button) event.getSource()).setDisable(false);
-            }
+            grid.addRow(0, new Label("Name:"), connectionName);
+            grid.addRow(1, new Label("Time:"), time);
         }
+
     }
 
 
-        class Place extends Circle {
-            public Place(double x, double y) {
-                super(x, y, 10, Color.BLUE);
-                setStroke(Color.BLACK);
+    class NewPlaceHandler implements EventHandler<ActionEvent> {
+        private boolean isUsed = false;
+
+        @Override
+        public void handle(ActionEvent event) {
+
+            if (!isUsed) {
+                map.setOnMouseClicked(new KlickHandler(this));
+                newPlace.setDisable(true);
+                map.setCursor(Cursor.CROSSHAIR);
+                isUsed = true;
             }
         }
+        public void reset() {
+            isUsed = false;
+            newPlace.setDisable(false);
+            map.setCursor(Cursor.DEFAULT);
+        }
+    }
+
+    class KlickHandler implements EventHandler<MouseEvent> {
+
+        private final NewPlaceHandler newPlaceHandler;
+        private boolean isUsed = false;
+
+        public KlickHandler(NewPlaceHandler newPlaceHandler) {
+            this.newPlaceHandler = newPlaceHandler;
+        }
+
+        @Override
+        public void handle(MouseEvent event) {
+
+            if (!isUsed) {
+                Place place = new Place(event.getX(), event.getY());
+                map.getChildren().add(place);
+
+                NewPlaceAlert dialog = new NewPlaceAlert();
+                String name = dialog.spawnNewPlaceDialog();
+                place.setName(name);
+                list.add(place);
+
+                Label label = new Label(name);
+                label.setLayoutX(place.getCenterX() - label.getWidth() / 2);
+                label.setLayoutY(place.getCenterY() - label.getHeight() / 2);
+                map.getChildren().add(label);
+                isUsed = true;
+                newPlaceHandler.reset();
+            }
+        }
+    }
 
     class ShowConnectionHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent event) {
         }
     }
+
     class FindHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent event) {
         }
     }
+
     ////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////
     class ExitMenuHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent event) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Vänta lite här...");
+            alert.setTitle("Obs");
             alert.setHeaderText("Avsluta utan att spara?");
             Optional<ButtonType> svar = alert.showAndWait();
-            if(svar.isPresent() && svar.get() == ButtonType.CANCEL){
+            if (svar.isPresent() && svar.get() == ButtonType.CANCEL) {
                 event.consume();
-            }else if(svar.isPresent() && svar.get() == ButtonType.OK){
+            } else if (svar.isPresent() && svar.get() == ButtonType.OK) {
                 stage.fireEvent(new WindowEvent(stage, WindowEvent.WINDOW_CLOSE_REQUEST));
             }
         }
     }
-    //ultra_rare_
+
     class SaveImageMenuHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent event) {
-            try{
+            try {
                 WritableImage image = root.snapshot(null, null);
                 BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null);
                 ImageIO.write(bufferedImage, "png", new File("capture.png"));
-            }catch(IOException e){
+            } catch (IOException e) {
                 Alert alert = new Alert(Alert.AlertType.ERROR, "Fel");
                 alert.showAndWait();
             }
         }
     }
+
     class SaveMenuHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent event) {
         }
     }
+
     class OpenItemHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent event) {
@@ -186,8 +231,7 @@ public class JavaFX extends Application {
             stage.setHeight(image.getHeight() + 120);
             root.setBottom(map);
             map.getChildren().add(imageView);
-
-
         }
     }
+
 }
